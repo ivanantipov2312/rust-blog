@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Post{% endblock title %}
+
+{% block head %}
+    {{ super() }}
+{% endblock head %}
+
+{% block window_title %}{{ post.title }}{% endblock window_title %}
+
+{% block content %}
+<h2 class="important">{{ post.title }}</h2>
+<p><em>By {{ post.user_id }}</em></p>
+<hr>
+<div>{{ post.contents | safe }}</div>
+<hr>
+<a href="/posts/">Return to the posts page!</a>
+{% endblock content %}

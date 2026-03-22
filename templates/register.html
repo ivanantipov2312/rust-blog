@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Register{% endblock title %}
+{% block window_title %}Register{% endblock window_title %}
+
+{% block content %}
+<h2>Register</h2>
+
+<form method="post" action="/register">
+    <div>
+        <label>Username:</label><br>
+        <input type="text" name="username" required>
+    </div>
+
+    <div>
+        <label>Email:</label><br>
+        <input type="email" name="email" required>
+    </div>
+
+    <div>
+        <label>Password:</label><br>
+        <input type="password" name="password" required>
+    </div>
+
+    <br>
+    <button type="submit">Register</button>
+</form>
+
+<p>
+    Already have an account?
+    <a href="/login">Login</a>
+</p>
+<p><a href="/">Back to Index!</a></p>
+{% endblock content %}

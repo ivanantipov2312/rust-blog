@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}New Post{% endblock title %}
+{% block window_title %}Create Post{% endblock window_title %}
+
+{% block content %}
+<h2>Create a new post</h2>
+
+<form method="post" action="/posts/new"> 
+    <div>
+        <label>Title:</label><br>
+        <input type="text" name="title" required>
+    </div>
+
+    <div>
+        <label>Slug (URL):</label><br>
+        <input type="text" name="slug" required>
+    </div>
+
+    <div>
+        <label>Content (Markdown):</label><br>
+        <textarea name="contents" rows="15" cols="60" required></textarea>
+    </div>
+
+    <br>
+    <button type="submit">Publish</button>
+</form>
+{% endblock content %}

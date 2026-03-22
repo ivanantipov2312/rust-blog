@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock title %}
+
+{% block window_title %}All Posts{% endblock window_title %}
+
+{% block content %}
+<h2 class="important">Posts</h2>
+<ul>
+	{% for post in posts %}
+    <li>
+      <a href="/posts/{{ post.post_id }}">{{ post.title }}</a>
+      <hr>
+      <small>By {{ post.user_id }}</small>
+    </li>
+	{% endfor %}
+</ul>
+<hr>
+<ul>
+	<li><a href="/posts/new">Add a new post(login required!)</a></li>
+	<li><a href="/">Back to Index</a></li>
+</ul>
+{% endblock content %}
