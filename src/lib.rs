@@ -7,25 +7,9 @@ mod templates;
 use std::sync::Arc;
 use axum::{Router, routing::get};
 use tower_http::services::ServeDir;
-use serde::{Deserialize, Serialize};
-use sqlx::sqlx_macros::FromRow;
 
 use db::Database;
 pub use templates::TEMPLATES;
-
-#[derive(Deserialize, Serialize, FromRow)]
-pub struct Post {
-    post_id: i32,
-    user_id: i32,
-    title: String,
-    contents: String,
-}
-
-impl Post {
-    pub fn contents_to_html(&mut self) {
-        self.contents = utils::markdown_to_html(&self.contents);
-    }
-}
 
 pub async fn app() -> Router {
     let state = Arc::new(Database::new("post_db.db").await.unwrap());
