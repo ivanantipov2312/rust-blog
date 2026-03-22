@@ -19,7 +19,6 @@ pub struct SignInData {
 pub struct CurrentUser {
     pub user_id: i32,
     pub email: String,
-    pub username: String,
     pub password_hash: String
 }
 
@@ -54,7 +53,7 @@ pub async fn sign_in(
 }
 
 async fn retrieve_user_by_email(email: &str, db: &Database) -> Option<CurrentUser> {
-    let u = match sqlx::query_as::<_, CurrentUser>("SELECT * from User where email=?")
+    let u = match sqlx::query_as::<_, CurrentUser>("SELECT User.user_id,User.email,User.password_hash from User where email=?")
         .bind(email)
         .fetch_one(&db.pool)
         .await {
