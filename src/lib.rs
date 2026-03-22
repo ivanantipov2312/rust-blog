@@ -1,3 +1,4 @@
+mod error;
 mod routes;
 mod db;
 mod auth;

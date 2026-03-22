@@ -3,11 +3,10 @@ pub mod middleware;
 
 use std::sync::Arc;
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
-use axum::http::StatusCode;
 use serde::Deserialize;
 use sqlx::prelude::FromRow;
 
-use crate::{auth::jwt::encode_jwt, db::Database};
+use crate::{auth::jwt::encode_jwt, db::Database, error::AppError};
 
 #[derive(Deserialize)]
 pub struct SignInData {
@@ -25,12 +24,12 @@ pub struct CurrentUser {
 pub async fn sign_in(
     user_data: SignInData,
     db: Arc<Database>
-) -> Result<String, StatusCode> {
+) -> Result<String, AppError> {
     let user = match retrieve_user_by_email(&user_data.email, &db).await {
         Some(u) => u,
         None => {
             println!("No user with this email exists!");
-            return Err(StatusCode::UNAUTHORIZED);
+            return Err(AppError::UserNotFound);
         }
     };
 
@@ -38,14 +37,14 @@ pub async fn sign_in(
         Ok(h) => h,
         Err(_) => {
             println!("Password hash doesn't have a valid format!");
-            return Err(StatusCode::UNAUTHORIZED);
+            return Err(AppError::AuthFailed);
         }
     };
 
     let argon2 = Argon2::default();
     if argon2.verify_password(user_data.password.as_bytes(), &parsed_hash).is_err() {
         println!("Hashed do not match!");
-        return Err(StatusCode::UNAUTHORIZED);
+        return Err(AppError::AuthFailed);
     }
 
     let encoded = encode_jwt(&user.email)?;

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Internal Error!{% endblock title %}
+
+{% block head %}
+    {{ super() }}
+{% endblock head %}
+
+{% block window_title %}Error!{% endblock window_title %}
+
+{% block content %}
+<h2 class="important">Unexpected server error!</h2>
+<p>Nobody knows whether the problem is you or me.</p>
+<a href="/posts/">Maybe you should go back and see all posts?</a>
+{% endblock content %}

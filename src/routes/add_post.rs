@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
-use axum::{Extension, Form, extract::State, http::StatusCode, response::Html};
+use axum::{Extension, Form, body::Body, extract::State, http::Response, response::{Html, IntoResponse, Redirect}};
 use serde::Deserialize;
 use tera::Context;
 
-use crate::{TEMPLATES, auth::CurrentUser, db::Database};
+use crate::{TEMPLATES, auth::CurrentUser, db::Database, error::AppError};
 
 #[derive(Deserialize)]
 pub struct NewPostData {
@@ -17,7 +17,7 @@ pub async fn add_post_post(
     State(db): State<Arc<Database>>,
     Extension(user): Extension<CurrentUser>,
     Form(data): Form<NewPostData>,
-) -> Result<Html<String>, StatusCode> {
+) -> Result<Response<Body>, Html<String>> {
 
     let res = sqlx::query(
         "INSERT INTO Post (user_id, title, slug, contents) VALUES (?, ?, ?, ?)"
@@ -30,8 +30,8 @@ pub async fn add_post_post(
     .await;
 
     match res {
-        Ok(_) => Ok(Html("Post created!".into())),
-        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
+        Ok(_) => Ok(Redirect::to("/posts").into_response()),
+        Err(_) => Err(AppError::Internal.into()),
     }
 }
 

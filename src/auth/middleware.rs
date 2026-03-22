@@ -5,9 +5,9 @@ use crate::{
 use axum::{
     body::Body,
     extract::{Request, State},
-    http::{header, Response, StatusCode},
+    http::{Response, header},
     middleware::Next,
-    response::{IntoResponse, Redirect},
+    response::{Html, IntoResponse, Redirect},
 };
 use std::sync::Arc;
 
@@ -15,7 +15,7 @@ pub async fn authorization_middleware(
     State(db): State<Arc<Database>>,
     mut req: Request,
     next: Next,
-) -> Result<Response<Body>, StatusCode> {
+) -> Result<Response<Body>, Html<String>> {
     let cookies = match req
         .headers()
         .get(header::COOKIE)

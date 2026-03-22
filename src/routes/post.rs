@@ -1,4 +1,4 @@
-use crate::{db::Database, TEMPLATES};
+use crate::{TEMPLATES, db::Database, error::AppError};
 use axum::{
     extract::{Path, State},
     response::Html,
@@ -31,7 +31,7 @@ pub async fn get_posts(State(db): State<Arc<Database>>) -> Html<String> {
         Ok(p) => p,
         Err(e) => {
             println!("{e}");
-            return TEMPLATES.render("notfound.html", &context).unwrap().into();
+            return AppError::PostNotFound.into()
         }
     };
 
@@ -40,7 +40,10 @@ pub async fn get_posts(State(db): State<Arc<Database>>) -> Html<String> {
     TEMPLATES.render("posts.html", &context).unwrap().into()
 }
 
-pub async fn get_post(Path(post_id): Path<i32>, State(db): State<Arc<Database>>) -> Html<String> {
+pub async fn get_post(
+    Path(post_id): Path<i32>,
+    State(db): State<Arc<Database>>
+) -> Html<String> {
     let mut context = Context::new();
 
     let mut post = match sqlx::query_as::<_, Post>(
@@ -57,7 +60,7 @@ pub async fn get_post(Path(post_id): Path<i32>, State(db): State<Arc<Database>>)
         Ok(p) => p,
         Err(e) => {
             println!("{e}");
-            return TEMPLATES.render("notfound.html", &context).unwrap().into();
+            return AppError::PostNotFound.into();
         }
     };
 

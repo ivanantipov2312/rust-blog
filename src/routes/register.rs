@@ -1,9 +1,9 @@
 use std::sync::Arc;
 use argon2::{Argon2, PasswordHasher, password_hash::{SaltString, rand_core::OsRng}};
-use axum::{Form, extract::State, http::StatusCode, response::Html};
+use axum::{Form, body::Body, extract::State, http::Response, response::{Html, IntoResponse, Redirect}};
 use serde::Deserialize;
 use tera::Context;
-use crate::{db::Database, templates::TEMPLATES};
+use crate::{db::Database, error::AppError, templates::TEMPLATES};
 
 #[derive(Deserialize)]
 pub struct RegisterData {
@@ -15,14 +15,15 @@ pub struct RegisterData {
 pub async fn register_post(
     State(db): State<Arc<Database>>,
     Form(data): Form<RegisterData>,
-) -> Result<Html<String>, StatusCode> {
+) -> Result<Response<Body>, Html<String>> {
 
     let salt = SaltString::generate(&mut OsRng);
 
-    let hash = Argon2::default()
-        .hash_password(data.password.as_bytes(), &salt)
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
-        .to_string();
+    let hash = match Argon2::default()
+        .hash_password(data.password.as_bytes(), &salt) {
+            Ok(h) => h,
+            Err(_) => return Err(AppError::Internal.into())
+        }.to_string();
 
     let res = sqlx::query(
         "INSERT INTO User (email, username, password_hash) VALUES (?, ?, ?)"
@@ -34,8 +35,8 @@ pub async fn register_post(
     .await;
 
     match res {
-        Ok(_) => Ok(Html("User registered!".into())),
-        Err(_) => Err(StatusCode::BAD_REQUEST),
+        Ok(_) => Ok(Redirect::to("/login").into_response()),
+        Err(_) => Err(AppError::Internal.into()),
     }
 }
 

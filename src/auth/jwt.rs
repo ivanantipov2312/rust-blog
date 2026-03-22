@@ -1,7 +1,8 @@
-use axum::http::StatusCode;
 use serde::{Serialize, Deserialize};
 use chrono::{Duration, Utc};
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, TokenData, Validation, decode, encode};
+
+use crate::error::AppError;
 
 #[derive(Serialize, Deserialize)]
 pub struct Claims {
@@ -10,10 +11,10 @@ pub struct Claims {
     pub email: String,
 }
 
-pub fn encode_jwt(email: &str) -> Result<String, StatusCode> {
+pub fn encode_jwt(email: &str) -> Result<String, AppError> {
     let secret = match std::env::var("JWT_TOKEN") {
         Ok(s) => s,
-        Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR)
+        Err(_) => return Err(AppError::Internal)
     };
 
     let now = Utc::now();
@@ -23,20 +24,20 @@ pub fn encode_jwt(email: &str) -> Result<String, StatusCode> {
     let claim = Claims { iat, exp, email: email.to_string() };
 
     encode(&Header::default(), &claim, &EncodingKey::from_secret(secret.as_bytes()))
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
+        .map_err(|_| AppError::Internal)
 }
 
-pub fn decode_jwt(jwt_token: String) -> Result<TokenData<Claims>, StatusCode> {
+pub fn decode_jwt(jwt_token: String) -> Result<TokenData<Claims>, AppError> {
     let secret = match std::env::var("JWT_TOKEN") {
         Ok(s) => s,
-        Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR)
+        Err(_) => return Err(AppError::Internal)
     };
 
-    let result: Result<TokenData<Claims>, StatusCode> = decode(
+    let result: Result<TokenData<Claims>, AppError> = decode(
         &jwt_token,
         &DecodingKey::from_secret(secret.as_bytes()),
         &Validation::default(),
     )
-    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR);
+    .map_err(|_| AppError::Internal);
     result
 }
