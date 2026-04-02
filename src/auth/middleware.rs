@@ -7,7 +7,7 @@ use axum::{
     extract::{Request, State},
     http::{Response, header},
     middleware::Next,
-    response::{Html, IntoResponse, Redirect},
+    response::{IntoResponse, Redirect},
 };
 use std::sync::Arc;
 
@@ -15,14 +15,14 @@ pub async fn authorization_middleware(
     State(db): State<Arc<Database>>,
     mut req: Request,
     next: Next,
-) -> Result<Response<Body>, Html<String>> {
+) -> Response<Body> {
     let cookies = match req
         .headers()
         .get(header::COOKIE)
         .and_then(|h| h.to_str().ok())
     {
         Some(c) => c,
-        None => return Ok(Redirect::to("/login").into_response()),
+        None => return Redirect::to("/login").into_response(),
     };
 
     let token = cookies.split(';').find_map(|c| {
@@ -36,18 +36,18 @@ pub async fn authorization_middleware(
 
     let token = match token {
         Some(t) => t,
-        None => return Ok(Redirect::to("/login").into_response()),
+        None => return Redirect::to("/login").into_response(),
     };
 
     let token_data = match decode_jwt(token.to_string()) {
         Ok(data) => data,
-        Err(_) => return Ok(Redirect::to("/login").into_response()),
+        Err(_) => return Redirect::to("/login").into_response(),
     };
 
     let current_user = match retrieve_user_by_email(&token_data.claims.email, &db).await {
         Some(user) => user,
-        None => return Ok(Redirect::to("/login").into_response()),
+        None => return Redirect::to("/login").into_response(),
     };
     req.extensions_mut().insert(current_user);
-    Ok(next.run(req).await)
+    next.run(req).await
 }

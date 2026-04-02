@@ -1,7 +1,6 @@
 use crate::{TEMPLATES, db::Database, error::AppError};
 use axum::{
-    extract::{Path, State},
-    response::Html,
+    body::Body, extract::{Path, State}, http::Response, response::{Html, IntoResponse}
 };
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
@@ -16,7 +15,7 @@ pub struct Post {
     pub contents: String,
 }
 
-pub async fn get_posts(State(db): State<Arc<Database>>) -> Html<String> {
+pub async fn get_posts(State(db): State<Arc<Database>>) -> Response<Body> {
     let mut context = Context::new();
 
     let posts = match sqlx::query_as::<_, Post>(
@@ -31,19 +30,19 @@ pub async fn get_posts(State(db): State<Arc<Database>>) -> Html<String> {
         Ok(p) => p,
         Err(e) => {
             println!("{e}");
-            return AppError::PostNotFound.into()
+            return AppError::PostNotFound.into_response()
         }
     };
 
     context.insert("posts", &posts);
 
-    TEMPLATES.render("posts.html", &context).unwrap().into()
+    Html(TEMPLATES.render("posts.html", &context).unwrap()).into_response()
 }
 
 pub async fn get_post(
     Path(post_id): Path<i32>,
     State(db): State<Arc<Database>>
-) -> Html<String> {
+) -> impl IntoResponse {
     let mut context = Context::new();
 
     let mut post = match sqlx::query_as::<_, Post>(
@@ -60,12 +59,12 @@ pub async fn get_post(
         Ok(p) => p,
         Err(e) => {
             println!("{e}");
-            return AppError::PostNotFound.into();
+            return AppError::PostNotFound.into_response();
         }
     };
 
     post.contents = crate::utils::markdown_to_html(&post.contents);
 
     context.insert("post", &post);
-    TEMPLATES.render("post.html", &context).unwrap().into()
+    Html(TEMPLATES.render("post.html", &context).unwrap()).into_response()
 }

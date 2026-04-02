@@ -12,6 +12,8 @@ use tower_http::services::ServeDir;
 use db::Database;
 pub use templates::TEMPLATES;
 
+use crate::routes::fallback;
+
 pub async fn app() -> Router {
     let state = Arc::new(Database::new("post_db.db").await.unwrap());
 
@@ -28,4 +30,5 @@ pub async fn app() -> Router {
         .merge(protected)
         .with_state(state)
         .nest_service("/static", ServeDir::new("static"))
+        .fallback(fallback)
 }

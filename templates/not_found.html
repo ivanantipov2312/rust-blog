@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Page does not exist!{% endblock title %}
+
+{% block head %}
+    {{ super() }}
+{% endblock head %}
+
+{% block window_title %}Error!{% endblock window_title %}
+
+{% block content %}
+<h2 class="important">This page does not exist!</h2>
+<p>Maybe you should pay more attention to your grammar?.</p>
+<a href="/">Or maybe you should go see what actually exists?</a>
+{% endblock content %}

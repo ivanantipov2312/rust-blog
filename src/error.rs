@@ -1,4 +1,4 @@
-use axum::{response::Html};
+use axum::{http::StatusCode, response::{Html, IntoResponse, Response}};
 use tera::Context;
 use crate::TEMPLATES;
 
@@ -9,13 +9,15 @@ pub enum AppError {
     Internal,
 }
 
-impl Into<Html<String>> for AppError {
-    fn into(self) -> Html<String> {
-         match self {
-            Self::AuthFailed => TEMPLATES.render("auth_error.html", &Context::new()).unwrap().into(),
-            Self::UserNotFound => TEMPLATES.render("user_not_found.html", &Context::new()).unwrap().into(),
-            Self::PostNotFound => TEMPLATES.render("post_not_found.html", &Context::new()).unwrap().into(),
-            Self::Internal => TEMPLATES.render("internal_error.html", &Context::new()).unwrap().into()
-        }       
+impl IntoResponse for AppError {
+    fn into_response(self) -> Response {
+        let (code, body) = match self {
+            AppError::Internal => (StatusCode::INTERNAL_SERVER_ERROR, Html(TEMPLATES.render("internal_error.html", &Context::new()).unwrap())),
+            AppError::UserNotFound => (StatusCode::UNAUTHORIZED, Html(TEMPLATES.render("user_not_found.html", &Context::new()).unwrap())),
+            AppError::PostNotFound => (StatusCode::NOT_FOUND, Html(TEMPLATES.render("post_not_found.html", &Context::new()).unwrap())),
+            AppError::AuthFailed => (StatusCode::UNAUTHORIZED, Html(TEMPLATES.render("auth_error.html", &Context::new()).unwrap()))
+        };
+
+        (code, body).into_response()
     }
 }

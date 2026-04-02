@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use axum::{Extension, Form, body::Body, extract::State, http::Response, response::{Html, IntoResponse, Redirect}};
+use axum::{Extension, Form, extract::State, response::{Html, IntoResponse, Redirect}};
 use serde::Deserialize;
 use tera::Context;
 
@@ -17,7 +17,7 @@ pub async fn add_post_post(
     State(db): State<Arc<Database>>,
     Extension(user): Extension<CurrentUser>,
     Form(data): Form<NewPostData>,
-) -> Result<Response<Body>, Html<String>> {
+) -> impl IntoResponse {
 
     let res = sqlx::query(
         "INSERT INTO Post (user_id, title, slug, contents) VALUES (?, ?, ?, ?)"
@@ -30,11 +30,11 @@ pub async fn add_post_post(
     .await;
 
     match res {
-        Ok(_) => Ok(Redirect::to("/posts").into_response()),
-        Err(_) => Err(AppError::Internal.into()),
+        Ok(_) => Redirect::to("/posts").into_response(),
+        Err(_) => AppError::Internal.into_response()
     }
 }
 
-pub async fn add_post_get() -> Html<String> {
-    TEMPLATES.render("add_post.html", &Context::default()).unwrap().into()
+pub async fn add_post_get() -> impl IntoResponse {
+    Html(TEMPLATES.render("add_post.html", &Context::default()).unwrap())
 }
