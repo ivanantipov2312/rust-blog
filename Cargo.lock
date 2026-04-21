@@ -1806,7 +1806,6 @@ dependencies = [
  "chrono",
  "dotenvy",
  "jsonwebtoken",
- "lazy_static",
  "pulldown-cmark",
  "rand_core 0.10.0",
  "serde",
