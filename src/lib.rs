@@ -15,7 +15,7 @@ pub use templates::TEMPLATES;
 use crate::routes::fallback;
 
 pub async fn app() -> Router {
-    let state = Arc::new(Database::new("post_db.db").await.unwrap());
+    let state = Arc::new(Database::new("data/post_db.db").await.unwrap());
 
     let protected = Router::new()
         .route("/posts/new", get(routes::add_post_get).post(routes::add_post_post))
@@ -23,7 +23,7 @@ pub async fn app() -> Router {
 
     Router::new()
         .route("/", get(routes::index))
-        .route("/posts/", get(routes::get_posts))
+        .route("/posts", get(routes::get_posts))
         .route("/posts/{id}", get(routes::get_post))
         .route("/login", get(routes::login_get).post(routes::login_post))
         .route("/register", get(routes::register_get).post(routes::register_post))
