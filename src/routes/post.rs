@@ -13,6 +13,7 @@ pub struct Post {
     pub username: String,
     pub title: String,
     pub contents: String,
+    pub slug: String,
 }
 
 pub async fn get_posts(State(db): State<Arc<Database>>) -> Response<Body> {
@@ -20,7 +21,7 @@ pub async fn get_posts(State(db): State<Arc<Database>>) -> Response<Body> {
 
     let posts = match sqlx::query_as::<_, Post>(
         "
-        SELECT Post.post_id,Post.title,Post.contents,User.username from Post
+        SELECT Post.post_id,Post.title,slug,Post.contents,User.username from Post
         JOIN User ON Post.user_id = User.user_id
         ORDER BY post_id DESC",
     )
@@ -39,7 +40,7 @@ pub async fn get_posts(State(db): State<Arc<Database>>) -> Response<Body> {
     Html(TEMPLATES.render("posts.html", &context).unwrap()).into_response()
 }
 
-pub async fn get_post(
+pub async fn get_post_by_id(
     Path(post_id): Path<i32>,
     State(db): State<Arc<Database>>
 ) -> impl IntoResponse {
@@ -47,12 +48,42 @@ pub async fn get_post(
 
     let mut post = match sqlx::query_as::<_, Post>(
         "
-        SELECT Post.post_id,Post.title,Post.contents,User.username from Post
+        SELECT Post.post_id,Post.title,slug,Post.contents,User.username from Post
         JOIN User ON Post.user_id = User.user_id
         WHERE post_id=?
         ",
     )
     .bind(post_id)
+    .fetch_one(&db.pool)
+    .await
+    {
+        Ok(p) => p,
+        Err(e) => {
+            println!("{e}");
+            return AppError::PostNotFound.into_response();
+        }
+    };
+
+    post.contents = crate::utils::markdown_to_html(&post.contents);
+
+    context.insert("post", &post);
+    Html(TEMPLATES.render("post.html", &context).unwrap()).into_response()
+}
+
+pub async fn get_post_by_slug(
+    Path(post_slug): Path<String>,
+    State(db): State<Arc<Database>>
+) -> impl IntoResponse {
+    let mut context = Context::new();
+
+    let mut post = match sqlx::query_as::<_, Post>(
+        "
+        SELECT Post.post_id,Post.title,Post.slug,Post.contents,User.username from Post
+        JOIN User ON Post.user_id = User.user_id
+        WHERE slug=?
+        ",
+    )
+    .bind(post_slug)
     .fetch_one(&db.pool)
     .await
     {
